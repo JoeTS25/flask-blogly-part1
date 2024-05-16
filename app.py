@@ -71,5 +71,49 @@ def delete_user():
 
     return redirect("/users")
 
+"""Post Routes"""
+
+@app.route('/users/<int:user_id>/posts/new', methods=["POST"])
+def new_post(user_id):
+    """Submit new user post form"""
+
+    user = User.query.get_or_404(user_id)
+    new_post = Post(title=request.form['title'], content=request.form['content'],
+                    user=user)
+    db.session.add(new_post)
+    db.session.commit()
+
+    return redirect(f"/users/{user_id}")
+
+@app.route('/posts/<int:post_id>')
+def show_posts(post_id):
+    """Shows specific post"""
+
+    post = Post.query.get_or_404(post_id)
+    return render_template('posts/show_post.html', post=post)
+
+@app.route('/posts/<int:post_id>/edit', methods=["POST"])
+def edit_post(post_id):
+    """Edit Specific Post"""
+
+    post = Post.query.get_or_404(post_id)
+    post.title = request.form['title']
+    post.content = request.form['content']
+
+    db.session.add(post)
+    db.session.commit()
+
+    return redirect(f"/users/{post.user_id}")
+
+@app.route('/posts/<int:post_id>/delete', methods=["POST"])
+def delete_post(post_id):
+    """Deletes Specific Post"""
+
+    post = Post.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect(f"/users/{post.user_id}")
+
 
 
