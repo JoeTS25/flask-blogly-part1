@@ -24,10 +24,31 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+    def friendly_date(self):
+        return self.created_at.strftime("%a %b %-d  %Y, %-I:%M %p")
 
-    def connect_db(app):
-        db.app = app
-        db.init_app(app)
+class PostTag(db.Model):
+    """Tags on posts"""
+
+    __tablename__ = "posts_tags"
+
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), primary_key=True)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'), primary_key=True)
+
+class Tag(db.Model):
+    """Tag for posts"""
+
+    __tablename__ = "tags"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+    posts = db.relationship(
+        "Post",
+        secondary="posts_tags",
+        backref="tags"
+    )
+
+def connect_db(app):
+    db.app = app
+    db.init_app(app)
     

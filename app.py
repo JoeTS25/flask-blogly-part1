@@ -20,6 +20,9 @@ db.create_all()
 @app.route("/")
 def home():
     return redirect("/users")
+##############################################################
+
+# User routes
 
 @app.route("/users")
 def list_users():
@@ -70,8 +73,9 @@ def delete_user():
     db.session.commit
 
     return redirect("/users")
+###################################################################
 
-"""Post Routes"""
+# Post Routes
 
 @app.route('/users/<int:user_id>/posts/new', methods=["POST"])
 def new_post(user_id):
@@ -115,5 +119,74 @@ def delete_post(post_id):
 
     return redirect(f"/users/{post.user_id}")
 
+#####################################################################
 
+# Tag Routes
+
+@app.route('/tags')
+def tags_list():
+    """Lists all tags with links to individual tags"""
+
+    tags = Tag.query.all()
+    return render_template('tags/tag_list.html', tags=tags)
+
+@app.route('/tags/new')
+def add_tag():
+    """Form to enter new tag"""
+
+    posts = Post.query.all()
+    return render_template('tags/new.html', posts=posts)
+
+@app.route('/tags/new', methods=["POST"])
+def make_tag():
+    """Creates new tag"""
+
+    post_ids = [int(num) for num in request.form.getlist("posts")]
+    posts = Post.query.filter(Post.id.in_(post_ids)).all()
+    new_tag = Tag(name=request.form['name'], posts=posts)
+
+    db.session.add(new_tag)
+    db.session.commit()
+
+    return redirect('/tags')
+
+@app.route('/tags/<int:tag_id')
+def show_tags(tag_id):
+    """Show page with tag info"""
+
+    tag = Tag.query.get_or_404(tag_id)
+    return render_template('tags/show.html', tag=tag)
+
+
+@app.route('/tags/<int:tag_id>/edit')
+def edit_tag_form(tag_id):
+    """Gets form to edit tag"""
+
+    tag = Tag.query.get_or_404(tag_id)
+    posts = Post.query.all()
+    return render_template('tags/edit.html', tag=tag, posts=posts)
+
+@app.route('/tags/<int:tag_id>/edit', methods=["POST"])
+def make_tag_edit(tag_id):
+    """Submits tag editing form"""
+
+    tag = Tag.query.get_or_404(tag_id)
+    tag.name = request.form['name']
+    post_ids = [int(num) for num in request.form.getlist("posts")]
+    tag.posts = Post.query.filter(Post.id.in_(post_ids)).all()
+
+    db.session.add(tag)
+    db.session.commit()
+
+    return redirect('/tags')
+
+@app.route('/tags/<int:tag_id>/delete', methods=["POST"])
+def delete_tag(tag_id):
+    """Deletes tag"""
+
+    tag = Tag.query.get_or_404(tag_id)
+    db.session.delete(tag)
+    db.session.commit()
+
+    return redirect('/tags')
 
